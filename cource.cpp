@@ -113,11 +113,11 @@ public:
 
 template<typename T>
 Myvector<Myvector<T>> deepcopy(const Myvector<Myvector<T>>& vec) {
-    std::Myvector<std::Myvector<T>> copy;
+    Myvector<Myvector<T>> Copy;
     for (const auto& row : vec) {
-        copy.push_back(row);
+        Copy.push_back(row);
     }
-    return copy;
+    return Copy;
 }
 const int SIZE = 9;
 int distInSquare(int start_i, int start_j, int released_i, int released_j){
@@ -144,7 +144,7 @@ int isEatingMoveAvailable(int current_i, int current_j, Myvector<Myvector<Myvect
     }
     return 0;
 }
-int isValid16GutiMoveAI(Myvector<Myvector<Myvector<std::pair<int, int>>>>& move_arr, int starting_j, int starting_i, int released_j, int released_i, int distInSqr, std::Myvector<std::Myvector<int>>& board_Arr, int currentPlayer) {
+int isValid16GutiMoveAI(Myvector<Myvector<Myvector<std::pair<int, int>>>>& move_arr, int starting_j, int starting_i, int released_j, int released_i, int distInSqr, Myvector<Myvector<int>>& board_Arr, int currentPlayer) {
     // need to verify if a move to (released_i, released_j) is possible
 
     std::pair<int, int> target = std::make_pair(released_i, released_j);
@@ -246,8 +246,8 @@ Myvector<Myvector<int>> simulate_move(std::pair<int, int> piece, std::pair<int, 
     return board;
 }
 
-Myvector<Myvector<int>> get_valid_moves(Myvector<Myvector<int>>& board, int color, pair<int, int>& piece) {
-    std::Myvector<std::Myvector<int>> valid_moves;
+Myvector<Myvector<int>> get_valid_moves(Myvector<Myvector<int>>& board, int color, std::pair<int, int>& piece) {
+    Myvector<Myvector<int>> valid_moves;
     int i = piece.first;
     int j = piece.second;
     auto move_arrr = compute_move_arr(); // Assuming compute_move_arr() returns a suitable data structure
@@ -258,7 +258,7 @@ Myvector<Myvector<int>> get_valid_moves(Myvector<Myvector<int>>& board, int colo
             if (ret == 1) {
                 valid_moves.push_back({ii, jj});
             } else if (ret == 2) {
-                std::Myvector<std::pair<int, int>> step;
+                Myvector<pair<int, int>> step;
                 int skip_i = (i + ii) / 2;
                 int skip_j = (j + jj) / 2;
                 step.push_back({skip_i, skip_j});
