@@ -1,17 +1,24 @@
 #include <iostream>
-// #include <Myvector>
-#include <algorithm>
-#include <utility>
-#include <limits.h>
+#include <vector>
+#include <map>
+#include <climits>
+
+using namespace std;
+template<typename T1, typename T2>
+struct Pair {
+    T1 first;
+    T2 second;
+    Pair(){}
+    Pair(const T1& _first, const T2& _second) : first(_first), second(_second) {}
+};
 
 template <typename T>
-class Myvector {
-private:
-    T* data;
-    size_t capacity;
-    size_t size;
-    const size_t INITIAL_CAPACITY = 10; // Initial capacity of the vector
-    
+class MyVector {
+public:
+    T* data;            // Pointer to dynamically allocated array
+    size_t capacity;    // Total capacity of the array
+    size_t size;        // Current number of elements in the array
+
     void resize(size_t newCapacity) {
         T* newData = new T[newCapacity]; // Allocate new array
 
@@ -26,32 +33,24 @@ private:
     }
 
 public:
-    Myvector() : data(nullptr), capacity(INITIAL_CAPACITY), size(0) {
-        data = new T[capacity];
+    MyVector() : data(nullptr), capacity(0), size(0) {}
+    MyVector(size_t initialCapacity) : data(new T[initialCapacity]), capacity(initialCapacity), size(0) {
+        for (size_t i = 0; i < initialCapacity; ++i) {
+        data[i] = T(); // Default initialize each element
     }
-
-    // Constructor with initial capacity
-    Myvector(size_t initialCapacity) : data(nullptr), capacity(initialCapacity), size(0) {
-        data = new T[capacity];
     }
+    ~MyVector() { delete[] data; }
 
-    // Destructor
-    ~Myvector() {
-        delete[] data;
-    }
-
-    // Copy constructor
-    Myvector(const Myvector& other) : data(nullptr), capacity(other.capacity), size(other.size) {
+    // Конструктор копирования и оператор присваивания
+    MyVector(const MyVector& other) : capacity(other.capacity), size(other.size) {
         data = new T[capacity];
         for (size_t i = 0; i < size; ++i) {
             data[i] = other.data[i];
         }
     }
-
-    // Assignment operator
-    Myvector& operator=(const Myvector& other) {
+    MyVector& operator=(const MyVector& other) {
         if (this != &other) {
-            delete[] data;
+            delete[] data; // Освобождение памяти текущего массива
             capacity = other.capacity;
             size = other.size;
             data = new T[capacity];
@@ -62,22 +61,21 @@ public:
         return *this;
     }
 
-    // Push element to the back of the Myvector
+    // Метод для добавления элемента в конец массива
     void push_back(const T& value) {
         if (size >= capacity) {
-            // If array is full, double the capacity
+            // Если массив полный, увеличиваем его ёмкость
             size_t newCapacity = (capacity == 0) ? 1 : capacity * 2;
             resize(newCapacity);
         }
-        data[size++] = value; // Add element and increment size
+        data[size++] = value; // Добавление элемента и увеличение размера
     }
-
-    // Get size of the Myvector
+    // Метод для доступа к размеру массива
     size_t getSize() const {
         return size;
     }
 
-    // Access element at index
+    // Оператор доступа к элементу по индексу
     T& operator[](size_t index) {
         if (index >= size) {
             throw std::out_of_range("Index out of range");
@@ -85,216 +83,491 @@ public:
         return data[index];
     }
 
-    // Const access element at index
     const T& operator[](size_t index) const {
         if (index >= size) {
             throw std::out_of_range("Index out of range");
         }
         return data[index];
     }
-    T* begin() {
-        return data;
+};
+class Point {
+public:
+    Pair<int, int> start;
+    MyVector<Pair<int, int>> end;
+
+public:
+    Point() : start(0, 0), end() {}
+    Point(const Pair<int, int>& _start, size_t initialCapacity) : start(_start), end(initialCapacity) {}
+    Point(const Pair<int, int>& _start, const MyVector<Pair<int, int>>& _end) : start(_start), end(_end) {}
+    Point(const Pair<int, int>& _start) : start(_start), end() {}
+    // Методы получения начальной и конечной точек
+    Pair<int, int> getStart() const {
+        return start;
     }
 
-    // Custom end function
-    T* end() {
-        return data + size;
+    const MyVector<Pair<int, int>>& getEnd() const {
+        return end;
     }
-
-    // Const versions of begin and end functions
-    const T* begin() const {
-        return data;
+    Pair<int, int>& getEndPoint(size_t index) {
+        return end[index];
     }
-
-    const T* end() const {
-        return data + size;
+    void print() const {
+        std::cout << "Start: (" << start.first << ", " << start.second << ") End: ";
+        for (size_t i = 0; i < end.getSize(); ++i) {
+            std::cout << "(" << end[i].first << ", " << end[i].second << ")";
+            if (i < end.getSize() - 1) {
+                std::cout << " ";
+            }
+        }
+        std::cout << std::endl;
+    }
+    void addEndPoint(const Pair<int, int>& endPoint) {
+        end.push_back(endPoint);
     }
 };
 
-template<typename T>
-Myvector<Myvector<T>> deepcopy(const Myvector<Myvector<T>>& vec) {
-    Myvector<Myvector<T>> Copy;
-    for (const auto& row : vec) {
-        Copy.push_back(row);
-    }
-    return Copy;
+
+vector<Point> createPointsVector(){
+
+    vector <Point> points(49);
+
+    // Заполняем массив данными вручную
+    points[0] = Point(Pair<int, int>(0, 2));
+    points[0].addEndPoint(Pair<int, int>(0, 4));
+    points[0].addEndPoint(Pair<int, int>(0, 6));
+    points[0].addEndPoint(Pair<int, int>(1, 3));
+    points[0].addEndPoint(Pair<int, int>(2, 4));
+
+    points[1] = Point(Pair<int, int>(0, 4));
+    points[1].addEndPoint(Pair<int, int>(0, 2));
+    points[1].addEndPoint(Pair<int, int>(0, 6));
+    points[1].addEndPoint(Pair<int, int>(2, 4));
+    points[1].addEndPoint(Pair<int, int>(1, 4));
+
+    points[2] = Point(Pair<int, int>(0, 6));
+    points[2].addEndPoint(Pair<int, int>(0, 4));
+    points[2].addEndPoint(Pair<int, int>(0, 2));
+    points[2].addEndPoint(Pair<int, int>(1, 5));
+    points[2].addEndPoint(Pair<int, int>(2, 4));
+
+    points[3] = Point(Pair<int, int>(1, 3));
+    points[3].addEndPoint(Pair<int, int>(0, 2));
+    points[3].addEndPoint(Pair<int, int>(1, 4));
+    points[3].addEndPoint(Pair<int, int>(1, 6));
+    points[3].addEndPoint(Pair<int, int>(2, 4));
+    points[3].addEndPoint(Pair<int, int>(3, 5));
+
+    points[4] = Point(Pair<int, int>(1, 4));
+    points[4].addEndPoint(Pair<int, int>(0, 4));
+    points[4].addEndPoint(Pair<int, int>(1, 3));
+    points[4].addEndPoint(Pair<int, int>(1, 5));
+    points[4].addEndPoint(Pair<int, int>(2, 4));
+    points[4].addEndPoint(Pair<int, int>(3, 4));
+
+    points[5] = Point(Pair<int, int>(1, 5));
+    points[5].addEndPoint(Pair<int, int>(0, 6));
+    points[5].addEndPoint(Pair<int, int>(1, 4));
+    points[5].addEndPoint(Pair<int, int>(2, 4));
+    points[5].addEndPoint(Pair<int, int>(3, 3));
+    points[5].addEndPoint(Pair<int, int>(1, 3));
+
+    points[6] = Point(Pair<int, int>(2, 0));
+    points[6].addEndPoint(Pair<int, int>(3, 1));
+    points[6].addEndPoint(Pair<int, int>(4, 0));
+    points[6].addEndPoint(Pair<int, int>(6, 0));
+    points[6].addEndPoint(Pair<int, int>(4, 2));
+
+    points[7] = Point(Pair<int, int>(2, 2));
+    points[7].addEndPoint(Pair<int, int>(2, 3));
+    points[7].addEndPoint(Pair<int, int>(2, 4));
+    points[7].addEndPoint(Pair<int, int>(3, 2));
+    points[7].addEndPoint(Pair<int, int>(3, 3));
+    points[7].addEndPoint(Pair<int, int>(4, 3));
+    points[7].addEndPoint(Pair<int, int>(4, 4));
+
+    points[8] = Point(Pair<int, int>(2, 3));
+    points[8].addEndPoint(Pair<int, int>(2, 2));
+    points[8].addEndPoint(Pair<int, int>(2, 4));
+    points[8].addEndPoint(Pair<int, int>(2, 5));
+    points[8].addEndPoint(Pair<int, int>(3, 3));
+    points[8].addEndPoint(Pair<int, int>(4, 3));
+
+    points[9] = Point(Pair<int, int>(2, 4));
+    points[9].addEndPoint(Pair<int, int>(0, 2));
+    points[9].addEndPoint(Pair<int, int>(0, 4));
+    points[9].addEndPoint(Pair<int, int>(0, 6));
+    points[9].addEndPoint(Pair<int, int>(1, 3));
+    points[9].addEndPoint(Pair<int, int>(1, 4));
+    points[9].addEndPoint(Pair<int, int>(1, 5));
+    points[9].addEndPoint(Pair<int, int>(2, 2));
+    points[9].addEndPoint(Pair<int, int>(2, 3));
+    points[9].addEndPoint(Pair<int, int>(2, 5));
+    points[9].addEndPoint(Pair<int, int>(2, 6));
+    points[9].addEndPoint(Pair<int, int>(3, 3));
+    points[9].addEndPoint(Pair<int, int>(3, 4));
+    points[9].addEndPoint(Pair<int, int>(3, 5));
+    points[9].addEndPoint(Pair<int, int>(4, 2));
+    points[9].addEndPoint(Pair<int, int>(4, 4));
+    points[9].addEndPoint(Pair<int, int>(4, 6));
+
+    points[10] = Point(Pair<int, int>(2, 5));
+    points[10].addEndPoint(Pair<int, int>(2, 3));
+    points[10].addEndPoint(Pair<int, int>(2, 4));
+    points[10].addEndPoint(Pair<int, int>(2, 6));
+    points[10].addEndPoint(Pair<int, int>(3, 5));
+    points[10].addEndPoint(Pair<int, int>(4, 5));
+
+    points[11] = Point(Pair<int, int>(2, 6));
+    points[11].addEndPoint(Pair<int, int>(2, 5));
+    points[11].addEndPoint(Pair<int, int>(2, 4));
+    points[11].addEndPoint(Pair<int, int>(3, 5));
+    points[11].addEndPoint(Pair<int, int>(3, 4));
+    points[11].addEndPoint(Pair<int, int>(3, 6));
+    points[11].addEndPoint(Pair<int, int>(4, 6));
+
+    points[12] = Point(Pair<int, int>(2, 8));
+    points[12].addEndPoint(Pair<int, int>(3, 7));
+    points[12].addEndPoint(Pair<int, int>(4, 6));
+    points[12].addEndPoint(Pair<int, int>(4, 8));
+    points[12].addEndPoint(Pair<int, int>(6, 8));
+
+    points[13] = Point(Pair<int, int>(3, 1));
+    points[13].addEndPoint(Pair<int, int>(2, 0));
+    points[13].addEndPoint(Pair<int, int>(4, 1));
+    points[13].addEndPoint(Pair<int, int>(5, 1));
+    points[13].addEndPoint(Pair<int, int>(4, 2));
+    points[13].addEndPoint(Pair<int, int>(5, 3));
+
+    points[14] = Point(Pair<int, int>(3, 2));
+    points[14].addEndPoint(Pair<int, int>(2, 2));
+    points[14].addEndPoint(Pair<int, int>(3, 3));
+    points[14].addEndPoint(Pair<int, int>(3, 4));
+    points[14].addEndPoint(Pair<int, int>(4, 2));
+    points[14].addEndPoint(Pair<int, int>(5, 2));
+
+    points[15] = Point(Pair<int, int>(3, 3));
+    points[15].addEndPoint(Pair<int, int>(2, 2));
+    points[15].addEndPoint(Pair<int, int>(2, 3));
+    points[15].addEndPoint(Pair<int, int>(2, 4));
+    points[15].addEndPoint(Pair<int, int>(3, 2));
+    points[15].addEndPoint(Pair<int, int>(3, 4));
+    points[15].addEndPoint(Pair<int, int>(4, 4));
+    points[15].addEndPoint(Pair<int, int>(4, 3));
+    points[15].addEndPoint(Pair<int, int>(4, 2));
+    points[15].addEndPoint(Pair<int, int>(3, 5));
+    points[15].addEndPoint(Pair<int, int>(1, 5));
+    points[15].addEndPoint(Pair<int, int>(5, 5));
+    points[15].addEndPoint(Pair<int, int>(5, 1));
+    points[15].addEndPoint(Pair<int, int>(5, 3));
+
+    points[16] = Point(Pair<int, int>(3, 4));
+    points[16].addEndPoint(Pair<int, int>(2, 4));
+    points[16].addEndPoint(Pair<int, int>(3, 3));
+    points[16].addEndPoint(Pair<int, int>(3, 5));
+    points[16].addEndPoint(Pair<int, int>(4, 4));
+    points[16].addEndPoint(Pair<int, int>(1, 4));
+    points[16].addEndPoint(Pair<int, int>(3, 2));
+    points[16].addEndPoint(Pair<int, int>(3, 6));
+    points[16].addEndPoint(Pair<int, int>(5, 4));
+
+    points[17] = Point(Pair<int, int>(3, 5));
+    points[17].addEndPoint(Pair<int, int>(2, 4));
+    points[17].addEndPoint(Pair<int, int>(2, 5));
+    points[17].addEndPoint(Pair<int, int>(2, 6));
+    points[17].addEndPoint(Pair<int, int>(3, 4));
+    points[17].addEndPoint(Pair<int, int>(3, 6));
+    points[17].addEndPoint(Pair<int, int>(3, 3));
+    points[17].addEndPoint(Pair<int, int>(4, 4));
+    points[17].addEndPoint(Pair<int, int>(4, 5));
+    points[17].addEndPoint(Pair<int, int>(4, 6));
+    points[17].addEndPoint(Pair<int, int>(5, 3));
+    points[17].addEndPoint(Pair<int, int>(5, 5));
+    points[17].addEndPoint(Pair<int, int>(5, 7));
+    points[17].addEndPoint(Pair<int, int>(1, 3));
+
+    points[18] = Point(Pair<int, int>(3, 6));
+    points[18].addEndPoint(Pair<int, int>(3, 4));
+    points[18].addEndPoint(Pair<int, int>(3, 5));
+    points[18].addEndPoint(Pair<int, int>(2, 6));
+    points[18].addEndPoint(Pair<int, int>(4, 6));
+    points[18].addEndPoint(Pair<int, int>(5, 6));
+
+    points[19] = Point(Pair<int, int>(3, 7));
+    points[19].addEndPoint(Pair<int, int>(4, 7));
+    points[19].addEndPoint(Pair<int, int>(2, 8));
+    points[19].addEndPoint(Pair<int, int>(4, 6));
+    points[19].addEndPoint(Pair<int, int>(5, 5));
+    points[19].addEndPoint(Pair<int, int>(5, 7));
+
+    points[20] = Point(Pair<int, int>(4, 0));
+    points[20].addEndPoint(Pair<int, int>(2, 0));
+    points[20].addEndPoint(Pair<int, int>(4, 1));
+    points[20].addEndPoint(Pair<int, int>(4, 2));
+    points[20].addEndPoint(Pair<int, int>(6, 0));
+
+    points[21] = Point(Pair<int, int>(4, 1));
+    points[21].addEndPoint(Pair<int, int>(4, 0));
+    points[21].addEndPoint(Pair<int, int>(4, 2));
+    points[21].addEndPoint(Pair<int, int>(4, 3));
+    points[21].addEndPoint(Pair<int, int>(3, 1));
+    points[21].addEndPoint(Pair<int, int>(5, 1));
+
+    points[22] = Point(Pair<int, int>(4, 2));
+    points[22].addEndPoint(Pair<int, int>(3, 1));
+    points[22].addEndPoint(Pair<int, int>(3, 2));
+    points[22].addEndPoint(Pair<int, int>(3, 3));
+    points[22].addEndPoint(Pair<int, int>(4, 3));
+    points[22].addEndPoint(Pair<int, int>(5, 3));
+    points[22].addEndPoint(Pair<int, int>(5, 2));
+    points[22].addEndPoint(Pair<int, int>(5, 1));
+    points[22].addEndPoint(Pair<int, int>(4, 1));
+    points[22].addEndPoint(Pair<int, int>(4, 0));
+    points[22].addEndPoint(Pair<int, int>(2, 0));
+    points[22].addEndPoint(Pair<int, int>(2, 2));
+    points[22].addEndPoint(Pair<int, int>(2, 4));
+    points[22].addEndPoint(Pair<int, int>(4, 4));
+    points[22].addEndPoint(Pair<int, int>(6, 4));
+    points[22].addEndPoint(Pair<int, int>(6, 2));
+    points[22].addEndPoint(Pair<int, int>(6, 0));
+
+    points[23] = Point(Pair<int, int>(4, 3));
+    points[23].addEndPoint(Pair<int, int>(4, 2));
+    points[23].addEndPoint(Pair<int, int>(3, 3));
+    points[23].addEndPoint(Pair<int, int>(4, 5));
+    points[23].addEndPoint(Pair<int, int>(5, 3));
+    points[23].addEndPoint(Pair<int, int>(4, 1));
+    points[23].addEndPoint(Pair<int, int>(2, 3));
+    points[23].addEndPoint(Pair<int, int>(4, 6));
+    points[23].addEndPoint(Pair<int, int>(6, 3));
+
+    points[24] = Point(Pair<int, int>(4, 4));
+    points[24].addEndPoint(Pair<int, int>(4, 3));
+    points[24].addEndPoint(Pair<int, int>(3, 3));
+    points[24].addEndPoint(Pair<int, int>(3, 4));
+    points[24].addEndPoint(Pair<int, int>(3, 5));
+    points[24].addEndPoint(Pair<int, int>(4, 5));
+    points[24].addEndPoint(Pair<int, int>(5, 5));
+    points[24].addEndPoint(Pair<int, int>(5, 4));
+    points[24].addEndPoint(Pair<int, int>(5, 3));
+    points[24].addEndPoint(Pair<int, int>(4, 2));
+    points[24].addEndPoint(Pair<int, int>(2, 2));
+    points[24].addEndPoint(Pair<int, int>(2, 4));
+    points[24].addEndPoint(Pair<int, int>(2, 6));
+    points[24].addEndPoint(Pair<int, int>(4, 6));
+    points[24].addEndPoint(Pair<int, int>(6, 6));
+    points[24].addEndPoint(Pair<int, int>(6, 4));
+    points[24].addEndPoint(Pair<int, int>(6, 2));
+
+    points[25] = Point(Pair<int, int>(4, 5));
+    points[25].addEndPoint(Pair<int, int>(4, 4));
+    points[25].addEndPoint(Pair<int, int>(3, 5));
+    points[25].addEndPoint(Pair<int, int>(5, 5));
+    points[25].addEndPoint(Pair<int, int>(5, 6));
+    points[25].addEndPoint(Pair<int, int>(4, 3));
+    points[25].addEndPoint(Pair<int, int>(4, 7));
+    points[25].addEndPoint(Pair<int, int>(2, 5));
+    points[25].addEndPoint(Pair<int, int>(6, 5));
+
+    points[26] = Point(Pair<int, int>(4, 6));
+    points[26].addEndPoint(Pair<int, int>(4, 5));
+    points[26].addEndPoint(Pair<int, int>(3, 5));
+    points[26].addEndPoint(Pair<int, int>(3, 6));
+    points[26].addEndPoint(Pair<int, int>(3, 7));
+    points[26].addEndPoint(Pair<int, int>(4, 7));
+    points[26].addEndPoint(Pair<int, int>(5, 7));
+    points[26].addEndPoint(Pair<int, int>(5, 6));
+    points[26].addEndPoint(Pair<int, int>(5, 5));
+    points[26].addEndPoint(Pair<int, int>(2, 4));
+    points[26].addEndPoint(Pair<int, int>(2, 6));
+    points[26].addEndPoint(Pair<int, int>(2, 8));
+    points[26].addEndPoint(Pair<int, int>(4, 8));
+    points[26].addEndPoint(Pair<int, int>(6, 8));
+    points[26].addEndPoint(Pair<int, int>(6, 6));
+    points[26].addEndPoint(Pair<int, int>(6, 4));
+    points[26].addEndPoint(Pair<int, int>(4, 4));
+
+    points[27] = Point(Pair<int, int>(4, 7));
+    points[27].addEndPoint(Pair<int, int>(4, 6));
+    points[27].addEndPoint(Pair<int, int>(3, 7));
+    points[27].addEndPoint(Pair<int, int>(4, 8));
+    points[27].addEndPoint(Pair<int, int>(5, 7));
+    points[27].addEndPoint(Pair<int, int>(4, 5));
+
+    points[28] = Point(Pair<int, int>(4, 8));
+    points[28].addEndPoint(Pair<int, int>(4, 7));
+    points[28].addEndPoint(Pair<int, int>(2, 8));
+    points[28].addEndPoint(Pair<int, int>(6, 8));
+    points[28].addEndPoint(Pair<int, int>(4, 6));
+
+    points[29] = Point(Pair<int, int>(5, 1));
+    points[29].addEndPoint(Pair<int, int>(6, 0));
+    points[29].addEndPoint(Pair<int, int>(4, 1));
+    points[29].addEndPoint(Pair<int, int>(3, 1));
+    points[29].addEndPoint(Pair<int, int>(4, 2));
+    points[29].addEndPoint(Pair<int, int>(3, 3));
+
+    points[30] = Point(Pair<int, int>(5, 2));
+    points[30].addEndPoint(Pair<int, int>(6, 2));
+    points[30].addEndPoint(Pair<int, int>(5, 3));
+    points[30].addEndPoint(Pair<int, int>(5, 4));
+    points[30].addEndPoint(Pair<int, int>(4, 2));
+    points[30].addEndPoint(Pair<int, int>(3, 2));
+
+    points[31] = Point(Pair<int, int>(5, 3));
+    points[31].addEndPoint(Pair<int, int>(6, 2));
+    points[31].addEndPoint(Pair<int, int>(6, 3));
+    points[31].addEndPoint(Pair<int, int>(6, 4));
+    points[31].addEndPoint(Pair<int, int>(5, 2));
+    points[31].addEndPoint(Pair<int, int>(5, 4));
+    points[31].addEndPoint(Pair<int, int>(4, 4));
+    points[31].addEndPoint(Pair<int, int>(4, 3));
+    points[31].addEndPoint(Pair<int, int>(4, 2));
+    points[31].addEndPoint(Pair<int, int>(5, 5));
+    points[31].addEndPoint(Pair<int, int>(7, 5));
+    points[31].addEndPoint(Pair<int, int>(3, 5));
+    points[31].addEndPoint(Pair<int, int>(3, 1));
+    points[31].addEndPoint(Pair<int, int>(3, 3));
+
+    points[32] = Point(Pair<int, int>(5, 4));
+    points[32].addEndPoint(Pair<int, int>(6, 4));
+    points[32].addEndPoint(Pair<int, int>(5, 3));
+    points[32].addEndPoint(Pair<int, int>(5, 5));
+    points[32].addEndPoint(Pair<int, int>(4, 4));
+    points[32].addEndPoint(Pair<int, int>(7, 4));
+    points[32].addEndPoint(Pair<int, int>(5, 2));
+    points[32].addEndPoint(Pair<int, int>(5, 6));
+    points[32].addEndPoint(Pair<int, int>(3, 4));
+
+    points[33] = Point(Pair<int, int>(5, 5));
+    points[33].addEndPoint(Pair<int, int>(6, 4));
+    points[33].addEndPoint(Pair<int, int>(6, 5));
+    points[33].addEndPoint(Pair<int, int>(6, 6));
+    points[33].addEndPoint(Pair<int, int>(5, 4));
+    points[33].addEndPoint(Pair<int, int>(5, 6));
+    points[33].addEndPoint(Pair<int, int>(5, 3));
+    points[33].addEndPoint(Pair<int, int>(4, 4));
+    points[33].addEndPoint(Pair<int, int>(4, 5));
+    points[33].addEndPoint(Pair<int, int>(4, 6));
+    points[33].addEndPoint(Pair<int, int>(3, 3));
+    points[33].addEndPoint(Pair<int, int>(3, 5));
+    points[33].addEndPoint(Pair<int, int>(3, 7));
+    points[33].addEndPoint(Pair<int, int>(7, 3));
+
+    points[34] = Point(Pair<int, int>(5, 6));
+    points[34].addEndPoint(Pair<int, int>(5, 4));
+    points[34].addEndPoint(Pair<int, int>(5, 5));
+    points[34].addEndPoint(Pair<int, int>(6, 6));
+    points[34].addEndPoint(Pair<int, int>(4, 6));
+    points[34].addEndPoint(Pair<int, int>(3, 6));
+
+    points[35] = Point(Pair<int, int>(5, 7));
+    points[35].addEndPoint(Pair<int, int>(4, 7));
+    points[35].addEndPoint(Pair<int, int>(6, 8));
+    points[35].addEndPoint(Pair<int, int>(4, 6));
+    points[35].addEndPoint(Pair<int, int>(3, 5));
+    points[35].addEndPoint(Pair<int, int>(3, 7));
+    points[36] = Point(Pair<int, int>(6, 0));
+    points[36].addEndPoint(Pair<int, int>(5, 1));
+    points[36].addEndPoint(Pair<int, int>(4, 0));
+    points[36].addEndPoint(Pair<int, int>(2, 0));
+    points[36].addEndPoint(Pair<int, int>(4, 2));
+
+    points[37] = Point(Pair<int, int>(6, 2));
+    points[37].addEndPoint(Pair<int, int>(6, 3));
+    points[37].addEndPoint(Pair<int, int>(6, 4));
+    points[37].addEndPoint(Pair<int, int>(5, 2));
+    points[37].addEndPoint(Pair<int, int>(5, 3));
+    points[37].addEndPoint(Pair<int, int>(4, 3));
+    points[37].addEndPoint(Pair<int, int>(4, 4));
+
+    points[38] = Point(Pair<int, int>(6, 3));
+    points[38].addEndPoint(Pair<int, int>(6, 2));
+    points[38].addEndPoint(Pair<int, int>(6, 4));
+    points[38].addEndPoint(Pair<int, int>(6, 5));
+    points[38].addEndPoint(Pair<int, int>(5, 3));
+    points[38].addEndPoint(Pair<int, int>(4, 3));
+
+    points[39] = Point(Pair<int, int>(6, 4));
+    points[39].addEndPoint(Pair<int, int>(8, 2));
+    points[39].addEndPoint(Pair<int, int>(8, 4));
+    points[39].addEndPoint(Pair<int, int>(8, 6));
+    points[39].addEndPoint(Pair<int, int>(7, 3));
+    points[39].addEndPoint(Pair<int, int>(7, 4));
+    points[39].addEndPoint(Pair<int, int>(7, 5));
+    points[39].addEndPoint(Pair<int, int>(6, 2));
+    points[39].addEndPoint(Pair<int, int>(6, 3));
+    points[39].addEndPoint(Pair<int, int>(6, 5));
+    points[39].addEndPoint(Pair<int, int>(6, 6));
+    points[39].addEndPoint(Pair<int, int>(5, 3));
+    points[39].addEndPoint(Pair<int, int>(5, 4));
+    points[39].addEndPoint(Pair<int, int>(5, 5));
+    points[39].addEndPoint(Pair<int, int>(4, 2));
+    points[39].addEndPoint(Pair<int, int>(4, 4));
+    points[39].addEndPoint(Pair<int, int>(4, 6));
+
+    points[40] = Point(Pair<int, int>(6, 5));
+    points[40].addEndPoint(Pair<int, int>(6, 3));
+    points[40].addEndPoint(Pair<int, int>(6, 4));
+    points[40].addEndPoint(Pair<int, int>(6, 6));
+    points[40].addEndPoint(Pair<int, int>(5, 5));
+    points[40].addEndPoint(Pair<int, int>(4, 5));
+
+    points[41] = Point(Pair<int, int>(6, 6));
+    points[41].addEndPoint(Pair<int, int>(6, 5));
+    points[41].addEndPoint(Pair<int, int>(6, 4));
+    points[41].addEndPoint(Pair<int, int>(5, 5));
+    points[41].addEndPoint(Pair<int, int>(5, 4));
+    points[41].addEndPoint(Pair<int, int>(5, 6));
+    points[41].addEndPoint(Pair<int, int>(4, 6));
+
+    points[42] = Point(Pair<int, int>(6, 8));
+    points[42].addEndPoint(Pair<int, int>(5, 7));
+    points[42].addEndPoint(Pair<int, int>(4, 6));
+    points[42].addEndPoint(Pair<int, int>(4, 8));
+    points[42].addEndPoint(Pair<int, int>(2, 8));
+
+    points[43] = Point(Pair<int, int>(7, 3));
+    points[43].addEndPoint(Pair<int, int>(8, 2));
+    points[43].addEndPoint(Pair<int, int>(7, 4));
+    points[43].addEndPoint(Pair<int, int>(7, 6));
+    points[43].addEndPoint(Pair<int, int>(6, 4));
+    points[43].addEndPoint(Pair<int, int>(5, 5));
+
+    points[44] = Point(Pair<int, int>(7, 4));
+    points[44].addEndPoint(Pair<int, int>(8, 4));
+    points[44].addEndPoint(Pair<int, int>(7, 3));
+    points[44].addEndPoint(Pair<int, int>(7, 5));
+    points[44].addEndPoint(Pair<int, int>(6, 4));
+    points[44].addEndPoint(Pair<int, int>(5, 4));
+
+    points[45] = Point(Pair<int, int>(7, 5));
+    points[45].addEndPoint(Pair<int, int>(8, 6));
+    points[45].addEndPoint(Pair<int, int>(7, 4));
+    points[45].addEndPoint(Pair<int, int>(6, 4));
+    points[45].addEndPoint(Pair<int, int>(5, 3));
+    points[45].addEndPoint(Pair<int, int>(7, 3));
+
+    points[46] = Point(Pair<int, int>(8, 2));
+    points[46].addEndPoint(Pair<int, int>(8, 4));
+    points[46].addEndPoint(Pair<int, int>(8, 6));
+    points[46].addEndPoint(Pair<int, int>(7, 3));
+    points[46].addEndPoint(Pair<int, int>(6, 4));
+
+    points[47] = Point(Pair<int, int>(8, 4));
+    points[47].addEndPoint(Pair<int, int>(8, 2));
+    points[47].addEndPoint(Pair<int, int>(8, 6));
+    points[47].addEndPoint(Pair<int, int>(6, 4));
+    points[47].addEndPoint(Pair<int, int>(7, 4));
+
+    points[48] = Point(Pair<int, int>(8, 6));
+    points[48].addEndPoint(Pair<int, int>(8, 4));
+    points[48].addEndPoint(Pair<int, int>(8, 2));
+    points[48].addEndPoint(Pair<int, int>(7, 5));
+    points[48].addEndPoint(Pair<int, int>(6, 4));
+
+    return points;
 }
 const int SIZE = 9;
-int distInSquare(int start_i, int start_j, int released_i, int released_j){
-    int dist = (start_i-released_i) * (start_i-released_i) + (start_j - released_j) * (start_j - released_j);
-    return dist;
-}
-
-int isEatingMoveAvailable(int current_i, int current_j, Myvector<Myvector<Myvector<std::pair<int, int>>>>& move_arr, Myvector<Myvector<int>>& boardArr, int currentPlayer) {
-    for (auto& k : move_arr[current_i][current_j]) {
-        int distInSqr = distInSquare(k.second, k.first, current_j, current_i);
-        if (distInSqr != 1 && distInSqr != 2 && boardArr[k.first][k.second] == 0) {
-            int m1 = (current_i + k.first) / 2;
-            int m2 = (current_j + k.second) / 2;
-            if (boardArr[m1][m2] == -1 || boardArr[m1][m2] == -1 || boardArr[m1][m2] == -1) {
-                return 0;
-            }
-            if (currentPlayer == 1 && boardArr[m1][m2] == 2) {
-                return 1;
-            }
-            if (currentPlayer == 2 && boardArr[m1][m2] == 1) {
-                return 1;
-            }
-        }
-    }
-    return 0;
-}
-int isValid16GutiMoveAI(Myvector<Myvector<Myvector<std::pair<int, int>>>>& move_arr, int starting_j, int starting_i, int released_j, int released_i, int distInSqr, Myvector<Myvector<int>>& board_Arr, int currentPlayer) {
-    // need to verify if a move to (released_i, released_j) is possible
-
-    std::pair<int, int> target = std::make_pair(released_i, released_j);
-    // cout << target << endl;
-    for (auto& k : move_arr[starting_i][starting_j]) {
-        if (k == target && board_Arr[target.first][target.second] == 0) {
-            if (distInSqr == 1 || distInSqr == 2) {
-                return 1;
-            } else {
-                int m1 = (starting_i + k.first) / 2;
-                int m2 = (starting_j + k.second) / 2;
-                if (board_Arr[m1][m2] == -1) {
-                    return 1;
-                }
-                if (currentPlayer == 1 && board_Arr[m1][m2] == 2) {
-                    return 2;
-                }
-                if (currentPlayer == 2 && board_Arr[m1][m2] == 1) {
-                    return 2;
-                }
-            }
-        }
-    }
-    return 0;
-}
-
-Myvector<std::pair<int, int>> get_all_pieces(Myvector<Myvector<int>>& board, int color) {
-    Myvector<std::pair<int, int>> all_pieces;
-    for (int i = 0; i < 9; ++i) {
-        for (int j = 0; j < 9; ++j) {
-            if (board[i][j] == color) {  // counting red/human guti
-                all_pieces.push_back(std::make_pair(i, j));
-            }
-        }
-    }
-    return all_pieces;
-}
-
-Myvector<Myvector<Myvector<std::pair<int, int>>>> compute_move_arr() {
-    Myvector<Myvector<Myvector<std::pair<int, int>>>> arr(Myvector<Myvector<std::pair<int, int>>>(Myvector<std::pair<int, int>>()));
-
-    arr[0][2] = {{0, 4}, {0, 6}, {1, 3}, {2, 4}};
-    arr[0][4] = {{0, 2}, {0, 6}, {2, 4}, {1, 4}};
-    arr[0][6] = {{0, 4}, {0, 2}, {1, 5}, {2, 4}};
-
-    arr[1][3] = {{0, 2}, {1, 4}, {1, 6}, {2, 4}, {3, 5}};
-    arr[1][4] = {{0, 4}, {1, 3}, {1, 5}, {2, 4}, {3, 4}};
-    arr[1][5] = {{0, 6}, {1, 4}, {2, 4}, {3, 3}, {1, 3}};
-
-    arr[2][0] = {{3, 1}, {4, 0}, {6, 0}, {4, 2}};
-    arr[2][2] = {{2, 3}, {2, 4}, {3, 2}, {3, 3}, {4, 3}, {4, 4}};
-    arr[2][3] = {{2, 2}, {2, 4}, {2, 5}, {3, 3}, {4, 3}};
-    arr[2][4] = {{0, 2}, {0, 4}, {0, 6}, {1, 3}, {1, 4}, {1, 5}, {2, 2}, {2, 3}, {2, 5}, {2, 6},
-                 {3, 3}, {3, 4}, {3, 5}, {4, 2}, {4, 4}, {4, 6}};
-    arr[2][5] = {{2, 3}, {2, 4}, {2, 6}, {3, 5}, {4, 5}};
-    arr[2][6] = {{2, 5}, {2, 4}, {3, 5}, {3, 4}, {3, 6}, {4, 6}};
-    arr[2][8] = {{3, 7}, {4, 6}, {4, 8}, {6, 8}};
-
-    arr[3][1] = {{2, 0}, {4, 1}, {5, 1}, {4, 2}, {5, 3}};
-    arr[3][2] = {{2, 2}, {3, 3}, {3, 4}, {4, 2}, {5, 2}};
-    arr[3][3] = {{2, 2}, {2, 3}, {2, 4}, {3, 2}, {3, 4}, {4, 4}, {4, 3}, {4, 2}, {3, 5}, {1, 5}, {5, 5}, {5, 1}, {5, 3}};
-    arr[3][4] = {{2, 4}, {3, 3}, {3, 5}, {4, 4}, {1, 4}, {3, 2}, {3, 6}, {5, 4}};
-    arr[3][5] = {{2, 4}, {2, 5}, {2, 6}, {3, 4}, {3, 6}, {3, 3}, {4, 4}, {4, 5}, {4, 6}, {5, 3}, {5, 5}, {5, 7}, {1, 3}};
-    arr[3][6] = {{3, 4}, {3, 5}, {2, 6}, {4, 6}, {5, 6}};
-    arr[3][7] = {{4, 7}, {2, 8}, {4, 6}, {5, 5}, {5, 7}};
-
-    arr[4][0] = {{2, 0}, {4, 1}, {4, 2}, {6, 0}};
-    arr[4][1] = {{4, 0}, {4, 2}, {4, 3}, {3, 1}, {5, 1}};
-    arr[4][2] = {{3, 1}, {3, 2}, {3, 3}, {4, 3}, {5, 3}, {5, 2}, {5, 1}, {4, 1}, {4, 0}, {2, 0}, {2, 2}, {2, 4}, {4, 4}, {6, 4}, {6, 2}, {6, 0}};
-    arr[4][3] = {{4, 2}, {3, 3}, {4, 5}, {5, 3}, {4, 1}, {2, 3}, {4, 6}, {6, 3}};
-    arr[4][4] = {{4, 3}, {3, 3}, {3, 4}, {3, 5}, {4, 5}, {5, 5}, {5, 4}, {5, 3}, {4, 2}, {2, 2}, {2, 4}, {2, 6}, {4, 6}, {6, 6}, {6, 4}, {6, 2}};
-    arr[4][5] = {{4, 4}, {3, 5}, {5, 5}, {5, 6}, {4, 3}, {4, 7}, {2, 5}, {6, 5}};
-    arr[4][6] = {{4, 5}, {3, 5}, {3, 6}, {3, 7}, {4, 7}, {5, 7}, {5, 6}, {5, 5}, {2, 4}, {2, 6}, {2, 8}, {4, 8}, {6, 8}, {6, 6}, {6, 4}, {4, 4}};
-    arr[4][7] = {{4, 6}, {3, 7}, {4, 8}, {5, 7}, {4, 5}};
-    arr[4][8] = {{4, 7}, {2, 8}, {6, 8}, {4, 6}};
-
-    // Зеркально отражаем остальные ходы
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 9; ++j) {
-            arr[SIZE - 1 - i][j] = arr[i][j];
-            for (auto& k : arr[SIZE - 1 - i][j]) {
-                k.first = SIZE - 1 - k.first;
-            }
-        }
-    }
-
-    return arr;
-}
-
-
-Myvector<Myvector<int>> simulate_move(std::pair<int, int> piece, std::pair<int, int> move, Myvector<Myvector<int>>& board, Myvector<std::pair<int, int>>& skip, int color) {
-    board[piece.first][piece.second] = 0;
-    board[move.first][move.second] = color;
-    for (const auto& i : skip) {
-        int row = i.first;
-        int col = i.second;
-        board[row][col] = 0;
-    }
-    return board;
-}
-
-Myvector<Myvector<int>> get_valid_moves(Myvector<Myvector<int>>& board, int color, std::pair<int, int>& piece) {
-    Myvector<Myvector<int>> valid_moves;
-    int i = piece.first;
-    int j = piece.second;
-    auto move_arrr = compute_move_arr(); // Assuming compute_move_arr() returns a suitable data structure
-    for (int ii = 0; ii < 9; ++ii) {
-        for (int jj = 0; jj < 9; ++jj) {
-            int distInSqr = distInSquare(j, i, jj, ii); // Assuming distanceInSquare1() is correctly defined
-            int ret = isValid16GutiMoveAI(move_arrr, j, i, jj, ii, distInSqr, board, color); // Assuming isValid16GutiMoveAI() is correctly defined
-            if (ret == 1) {
-                valid_moves.push_back({ii, jj});
-            } else if (ret == 2) {
-                Myvector<pair<int, int>> step;
-                int skip_i = (i + ii) / 2;
-                int skip_j = (j + jj) / 2;
-                step.push_back({skip_i, skip_j});
-                // How to do this part with mymap, deepcopy, and eating_dfs is not clear from the original code
-                // You might need to adapt this part based on your actual implementation
-            }
-        }
-    }
-    return valid_moves;
-}
-
-Myvector<Myvector<Myvector<int>>> get_all_moves(Myvector<Myvector<int>>& board, int color) {
-    Myvector<Myvector<Myvector<int>>> moves;
-    for (auto& piece : get_all_pieces(board, color)) {
-        Myvector<Myvector<int>> valid_moves = get_valid_moves(board, color, piece);
-        for (auto& i : valid_moves) {
-            std::pair<int, int> move = {i[0], i[1]};
-            Myvector<std::pair<int, int>> skip;
-            // Populate skip according to your logic
-            Myvector<Myvector<int>> temp_board = deepcopy(board); // Assuming deepcopy() is correctly defined
-            Myvector<Myvector<int>> new_board = simulate_move(piece, move, temp_board, skip, color);
-            moves.push_back(new_board);
-        }
-    }
-    return moves;
-}
-Myvector<Myvector<int>> convert_to_Myvector(int matrix[9][9]) {
-    Myvector<Myvector<int>> board(9, Myvector<int>(9));
-    for (int i = 0; i < 9; ++i) {
-        for (int j = 0; j < 9; ++j) {
-            board[i][j] = matrix[i][j];
-        }
-    }
-    return board;
-}
-const int size = 9;
 int fullyDefCells[9][9] = { {0, 0, 1, 0, 0, 1, 0, 0, 0 },
                             {0, 0, 0, 0, 0, 0, 0, 0, 0 },
                             {1, 0, 1, 0, 0, 0, 1, 0, 1 },
@@ -322,10 +595,10 @@ bool isWhiteSoldier(int soldier) {             //white soldiers
 bool isRedSoldier(int soldier) {               //red soldiers
     return RED_SOLDIER == soldier;
 }
-int isInFullyDef(int matrix[9][9], int ch) {
+int isInFullyDef(int** matrix, int ch) {
     int bonus = 0;
-    for (int i = 0; i < size; ++i) {
-        for (int j = 0; j < size; ++j) {
+    for (int i = 0; i < SIZE; ++i) {
+        for (int j = 0; j < SIZE; ++j) {
             if (matrix[i][j] == ch && matrix[i][j] == fullyDefCells[i][j]) {
                 bonus += FULLY_DEF_BONUS;
             }
@@ -334,11 +607,11 @@ int isInFullyDef(int matrix[9][9], int ch) {
 
     return bonus;
 }
-int mainDiagonalParallel(int matrix[9][9], int ch) {
+int mainDiagonalParallel(int** matrix, int ch) {
     int localBonus = 0;
     int bonus = 0;
     
-    for (int i = 1; i < size+1; ++i) {                                //main diagonal
+    for (int i = 1; i < SIZE+1; ++i) {                                //main diagonal
        
         if(matrix[i-1][i-1] == matrix[i][i] && matrix[i][i] == ch && matrix[i-1][i-1] == ch){
             localBonus += DEF_BONUS;
@@ -349,7 +622,7 @@ int mainDiagonalParallel(int matrix[9][9], int ch) {
     
 
     localBonus = 0;
-    for (int i = 1; i < size - 2 + 1; ++i) {                            //higher diagonal
+    for (int i = 1; i < SIZE - 2 + 1; ++i) {                            //higher diagonal
         
         if(matrix[i-1][i+2-1] == matrix[i][i+2] && matrix[i][i + 2] == ch && matrix[i - 1][i + 2 - 1])
             localBonus += DEF_BONUS;
@@ -358,7 +631,7 @@ int mainDiagonalParallel(int matrix[9][9], int ch) {
    
     
     localBonus = 0; 
-    for (int i = 3; i < size + 1; ++i) {                                //lower diagonal
+    for (int i = 3; i < SIZE + 1; ++i) {                                //lower diagonal
         
         if (matrix[i - 1][i - 2 - 1] == matrix[i][i - 2] && matrix[i - 1][i - 2 - 1] == ch && matrix[i][i - 2] == ch) {
             localBonus += DEF_BONUS;
@@ -368,13 +641,13 @@ int mainDiagonalParallel(int matrix[9][9], int ch) {
     
     return bonus;
 }
-int sideDiagonalParallel(int matrix[9][9], int ch) {
+int sideDiagonalParallel(int** matrix, int ch) {
     int bonus = 0;
     int localBonus = 0;
    
-    for (int i = 1; i < size + 1; ++i) {                                //side diagonal
+    for (int i = 1; i < SIZE + 1; ++i) {                                //side diagonal
         
-        if (matrix[i][size - i] == matrix[i-1][size - i] && matrix[i - 1][size - i] == ch && matrix[i][size - i]) {
+        if (matrix[i][SIZE - i] == matrix[i-1][SIZE - i] && matrix[i - 1][SIZE - i] == ch && matrix[i][SIZE - i]) {
             localBonus += DEF_BONUS;
         }
     }
@@ -383,9 +656,9 @@ int sideDiagonalParallel(int matrix[9][9], int ch) {
     
 
     localBonus=0;
-    for (int i = 1; i < size - 2 + 1; ++i) {                            //hegher diagonal
+    for (int i = 1; i < SIZE - 2 + 1; ++i) {                            //hegher diagonal
       
-        if (matrix[i - 1][size - i - 3 + 1] == matrix[i][size - i - 3] && matrix[i - 1][size - i - 3 + 1] == ch && matrix[i][size - i - 3] == ch) {
+        if (matrix[i - 1][SIZE - i - 3 + 1] == matrix[i][SIZE - i - 3] && matrix[i - 1][SIZE - i - 3 + 1] == ch && matrix[i][SIZE - i - 3] == ch) {
             localBonus += DEF_BONUS;
         }
     }
@@ -394,9 +667,9 @@ int sideDiagonalParallel(int matrix[9][9], int ch) {
     
     
     localBonus=0;
-    for (int i = 3; i < size + 1; ++i) {                                //lower diagonal
+    for (int i = 3; i < SIZE + 1; ++i) {                                //lower diagonal
         
-        if (matrix[i - 1][size - i + 3 - 1] == matrix[i][size - i + 1] && matrix[i - 1][size - i + 3 - 1] == ch && matrix[i][size - i + 1] == ch) {
+        if (matrix[i - 1][SIZE - i + 3 - 1] == matrix[i][SIZE - i + 1] && matrix[i - 1][SIZE - i + 3 - 1] == ch && matrix[i][SIZE - i + 1] == ch) {
             localBonus += DEF_BONUS;
         }
     }
@@ -405,12 +678,12 @@ int sideDiagonalParallel(int matrix[9][9], int ch) {
       
     return bonus;
 }
-int columnCalc(int matrix[9][9], int ch) {
+int columnCalc(int** matrix, int ch) {
     int localBonus = 0;
     int bonus = 0;
    
-    for (int j = 0; j < size; ++j) {
-        for (int i = 1; i < size + 1; ++i) {
+    for (int j = 0; j < SIZE; ++j) {
+        for (int i = 1; i < SIZE + 1; ++i) {
            
             if(i != 2 || i != 7) {
                 if (matrix[i - 1][j] == matrix[i][j] && matrix[i - 1][j] == ch && matrix[i][j] == ch) {
@@ -429,12 +702,12 @@ int columnCalc(int matrix[9][9], int ch) {
     }
     return bonus;    
 }
-int rowCalc(int matrix[9][9], int ch) {
+int rowCalc(int** matrix, int ch) {
     int localBonus = 0;
     int bonus = 0;
    
-    for (int i = 0; i < size; ++i) {
-        for (int j = 1; j < size + 1; ++j) {
+    for (int i = 0; i < SIZE; ++i) {
+        for (int j = 1; j < SIZE + 1; ++j) {
            
             if(j != 2 || j != 7) {
                 if(matrix[i][j-1] == matrix[i][j] && matrix[i][j-1] == ch && matrix[i][j] == ch){
@@ -454,10 +727,10 @@ int rowCalc(int matrix[9][9], int ch) {
     return bonus;
     
 }
-int calculate(int matrix[9][9]) {
+int calculate(int** matrix) {
     int white = 0, red = 0;    
-    for (int i = 0; i < size; ++i) {
-        for (int j = 0; j < size; ++j) {
+    for (int i = 0; i < SIZE; ++i) {
+        for (int j = 0; j < SIZE; ++j) {
             if (matrix[i][j] == 1) {
                 red += RED_SOLDIER;
             }
@@ -468,7 +741,7 @@ int calculate(int matrix[9][9]) {
     }
     return white-red;
 }
-int Evalutate(int matrix[9][9]) {
+int Evalutate(int** matrix) {
     int white = 0, red = 0;
     white += rowCalc(matrix, WHITE_SOLDIER_CH);
     white += columnCalc(matrix, WHITE_SOLDIER_CH);
@@ -483,8 +756,8 @@ int Evalutate(int matrix[9][9]) {
 int checkWinner(int matrix[9][9]) {
     int redSoldiersCount = 0;
     int whiteSoldiersCount = 0;
-    for (int i = 0; i < size; ++i) {
-        for (int j = 0; j < size; ++j) {
+    for (int i = 0; i < SIZE; ++i) {
+        for (int j = 0; j < SIZE; ++j) {
             if (matrix[i][j] == RED_SOLDIER_CH) {
                 ++redSoldiersCount;
             }
@@ -503,85 +776,163 @@ int checkWinner(int matrix[9][9]) {
     }
     return 0;
 }
-int minimax(Myvector<Myvector<int>>& board, int depth, bool maximizing_player) {
-    Myvector<Myvector<int>> board = convert_to_Myvector(matrix);
-    int winner = checkWinner(matrix);
-    if (depth == 0 || winner != 0) {
-        if (winner == WHITE_SOLDIER_CH)
-            return INT_MAX; // Maximize score for white
-        else if (winner == RED_SOLDIER_CH)
-            return INT_MIN; // Minimize score for red
-        else
-            return Evalutate(matrix); // Evaluate the board
+// Метод для перемещения солдата
+int** simulateMove(int matrix[][9], const Pair<int, int>& start, const Pair<int, int>& end) {
+    int** newMatrix = new int*[9];
+    for (int i = 0; i < 9; ++i) {
+        newMatrix[i] = new int[9];
+        for (int j = 0; j < 9; ++j) {
+            newMatrix[i][j] = matrix[i][j];
+        }
     }
 
-    if (maximizing_player) {
-        int max_eval = INT_MIN;
-        Myvector<std::pair<std::pair<int, int>, std::pair<int, int>>> moves = generate_moves(board, WHITE_SOLDIER_CH);
-        for (auto& move : moves) {
-            Myvector<Myvector<int>> new_board = simulate_move(move.first, move.second, board, {}, WHITE_SOLDIER_CH);
-            int eval = minimax(new_board, depth - 1, false);
-            max_eval = std::max(max_eval, eval);
+    if (start.first < 0 || start.first >= 9 || start.second < 0 || start.second >= 9 ||
+        end.first < 0 || end.first >= 9 || end.second < 0 || end.second >= 9) {
+        std::cout << "Invalid move: Coordinates out of bounds." << std::endl;
+        return newMatrix;
+    }
+
+    if (newMatrix[end.first][end.second] != 0) {
+        std::cout << "Invalid move: End point is occupied." << std::endl;
+        return newMatrix;
+    }
+
+    newMatrix[end.first][end.second] = newMatrix[start.first][start.second];
+    newMatrix[start.first][start.second] = 0;
+
+    std::cout << "Move successful: Soldier moved from (" << start.first << ", " << start.second << ") to ("
+        << end.first << ", " << end.second << ")." << std::endl;
+
+    return newMatrix;
+}
+
+std::vector<Pair<Pair<int, int>, Pair<int, int>>> getAllAvailableMoves_(const int matrix[][9], const std::vector<Point>& points) {
+    std::vector<Pair<Pair<int, int>, Pair<int, int>>> availableMoves;
+
+    // Loop through each point on the board
+    for (const Point& point : points) {
+        Pair<int, int> start = point.getStart();
+
+        int currentPlayer = matrix[start.first][start.second];
+        if (currentPlayer == 0) continue;
+        if ((currentPlayer == 1 && start.first < 5) || (currentPlayer == 2 && start.first > 3))
+            continue;
+
+        const MyVector<Pair<int, int>>& endPoints = point.getEnd();
+        for (size_t j = 0; j < endPoints.getSize(); ++j) {
+            Pair<int, int> end = endPoints[j];
+            if (matrix[end.first][end.second] == 0) {
+                availableMoves.push_back(Pair<Pair<int, int>, Pair<int, int>>(start, end));
+            }
         }
-        return max_eval;
+    }
+
+    return availableMoves;
+}
+
+bool isValidMove(const int matrix[][9], const Pair<int, int>& start, const Pair<int, int>& end) {
+    if (start.first < 0 || start.first >= 9 || start.second < 0 || start.second >= 9 ||
+        end.first < 0 || end.first >= 9 || end.second < 0 || end.second >= 9) {
+        return false;
+    }
+
+    return (matrix[end.first][end.second] == 0);
+}
+
+int** eatSoldier(int matrix[][9], const Pair<int, int>& start, const Pair<int, int>& end) {
+    int** newMatrix = simulateMove(matrix, start, end);
+
+    int oppositeSoldier = (newMatrix[start.first][start.second] == 1) ? 2 : 1;
+    if (newMatrix[end.first][end.second] == oppositeSoldier) {
+        newMatrix[end.first][end.second] = 0;
+        std::cout << "Soldier at (" << end.first << ", " << end.second << ") eaten!" << std::endl;
+    }
+
+    return newMatrix;
+}
+int minimax(int** matrix, int depth, bool isMaximizingPlayer) {
+    int score = Evalutate(matrix);
+    if (depth == 0) {
+        return score;
+    }
+
+    std::vector<Pair<Pair<int, int>, Pair<int, int>>> availableMoves = getAllAvailableMoves_(matrix, points);
+    if (isMaximizingPlayer) {
+        int bestScore = -9999;
+        for (const auto& move : availableMoves) {
+            int** newMatrix = simulateMove(matrix, move.first, move.second);
+            int newScore = minimax(newMatrix, depth - 1, false);
+            bestScore = std::max(bestScore, newScore);
+            
+        }
+        return bestScore;
     } else {
-        int min_eval = INT_MAX;
-        Myvector<std::pair<std::pair<int, int>, std::pair<int, int>>> moves = generate_moves(board, RED_SOLDIER_CH);
-        for (auto& move : moves) {
-            Myvector<Myvector<int>> new_board = simulate_move(move.first, move.second, board, {}, RED_SOLDIER_CH);
-            int eval = minimax(new_board, depth - 1, true);
-            min_eval = std::min(min_eval, eval);
+        int bestScore = 9999;
+        for (const auto& move : availableMoves) {
+            int** newMatrix = simulateMove(matrix, move.first, move.second);
+            int newScore = minimax(newMatrix, depth - 1, true);
+            bestScore = std::min(bestScore, newScore);
+            
         }
-        return min_eval;
+        return bestScore;
     }
 }
 
-// Function to call Minimax
-std::pair<int, std::pair<int, int>> find_best_move(Myvector<Myvector<int>>& board, int color) {
-    int best_eval = INT_MIN;
-    std::pair<int, int> best_move = {-1, -1};
-    Myvector<std::pair<std::pair<int, int>, std::pair<int, int>>> moves = generate_moves(board, color);
-    for (auto& move : moves) {
-        Myvector<Myvector<int>> new_board = simulate_move(move.first, move.second, board, {}, color);
-        int eval = minimax(new_board, 3, false);
-        if (eval > best_eval) {
-            best_eval = eval;
-            best_move = move.second;
-        }
-    }
-    return {best_eval, best_move};
-}
 int main() {
-    // std::Myvector<std::Myvector<std::Myvector<std::pair<int, int>>>> arr = compute_move_arr();
+    int** matrix; // Определите матрицу игровой доски
 
-    // // Пример вывода всех возможных ходов для каждой ячейки
-    // for (int i = 0; i < SIZE; ++i) {
-    //     for (int j = 0; j < SIZE; ++j) {
-    //         std::cout << "Possible moves for cell (" << i << ", " << j << "): ";
-    //         for (auto& move : arr[i][j]) {
-    //            std::cout << "(" << move.first << ", " << move.second << ") ";
-    //         }
-    //         std::cout <<std:: endl;
-    //     }
-    // }
-    int matrix[9][9] = {    {-1, -1, 1, -1, 1, -1, 1, -1, -1 },
-                            {-1, -1, -1, 1, 1, 1, -1, -1, -1 },
-                            {0, -1, 1, 1, 1, 1, 1, -1, 0 },
-                            {-1, 0, 1, 1, 1, 1, 1, 0, -1 },
-                            {0, 0, 0, 0, 0, 0, 0, 0, 0 },
-                            {-1, 0, 2, 2, 2, 2, 2, 0, -1 },
-                            {0, -1, 2, 2, 2, 2, 2, -1, 0 },
-                            {-1, -1, -1, 2, 2, 2, -1, -1, -1 },
-                            {-1, -1, 2, -1, 2, -1, 2, -1, -1 } };
-    
-   
-    int result = Evalutate(matrix);
-    if (result < 0) {
-        std::cout<<" Red Wins "<< result << std::endl;
+    // Заполните матрицу
+    int initialMatrix[9][9] = { {-1, -1, 1, -1, 1, -1, 1, -1, -1},
+                                 {-1, -1, -1, 1, 1, 1, -1, -1, -1},
+                                 {0, -1, 1, 1, 1, 1, 1, -1, 0},
+                                 {-1, 0, 1, 1, 0, 1, 1, 0, -1},
+                                 {0, 0, 0, 0, 0, 0, 0, 0, 0},
+                                 {-1, 0, 2, 2, 1, 2, 2, 0, -1},
+                                 {0, -1, 2, 2, 2, 2, 2, -1, 0},
+                                 {-1, -1, -1, 2, 2, 2, -1, -1, -1},
+                                 {-1, -1, 2, -1, 2, -1, 2, -1, -1} };
+    matrix = new int*[9];
+    for (int i = 0; i < 9; ++i) {
+        matrix[i] = new int[9];
+        for (int j = 0; j < 9; ++j) {
+            matrix[i][j] = initialMatrix[i][j];
+        }
     }
-    else {
-        std::cout<<" White Wins "<< result << std::endl;
+
+    // Создайте вектор точек points
+    std::vector<Point> points = createPointsVector();
+
+    // Получите доступные ходы
+    std::vector<Pair<Pair<int, int>, Pair<int, int>>> availableMoves = getAllAvailableMoves_(matrix, points);
+
+    // Выберите лучший ход с помощью минимакс алгоритма
+    int depth = 3; // Установите глубину в соответствии с вашими потребностями
+    bool isMaximizingPlayer = true; // Предположим, что максимизирующий игрок - это компьютерный игрок
+    int bestScore = -9999;
+    Pair<Pair<int, int>, Pair<int, int>> bestMove;
+    for (const auto& move : availableMoves) {
+        int** newMatrix = simulateMove(matrix, move.first, move.second);
+        int score = minimax(newMatrix, depth - 1, false);
+        if (score > bestScore) {
+            bestScore = score;
+            bestMove = move;
+        }
+        // Освободить память для newMatrix
+        for (int i = 0; i < SIZE; ++i) {
+            delete[] newMatrix[i];
+        }
+        delete[] newMatrix;
     }
+
+    // Выведите лучший ход
+    std::cout << "Best move: (" << bestMove.first.first << ", " << bestMove.first.second << ") -> ("
+              << bestMove.second.first << ", " << bestMove.second.second << ")" << std::endl;
+
+    // Освободить память для matrix
+    for (int i = 0; i < 9; ++i) {
+        delete[] matrix[i];
+    }
+    delete[] matrix;
 
     return 0;
 }
