@@ -777,7 +777,7 @@ int checkWinner(int matrix[9][9]) {
     return 0;
 }
 // Метод для перемещения солдата
-int** simulateMove(int matrix[][9], const Pair<int, int>& start, const Pair<int, int>& end) {
+int** simulateMove(int** matrix, const Pair<int, int>& start, const Pair<int, int>& end) {
     int** newMatrix = new int*[9];
     for (int i = 0; i < 9; ++i) {
         newMatrix[i] = new int[9];
@@ -806,7 +806,7 @@ int** simulateMove(int matrix[][9], const Pair<int, int>& start, const Pair<int,
     return newMatrix;
 }
 
-std::vector<Pair<Pair<int, int>, Pair<int, int>>> getAllAvailableMoves_(const int matrix[][9], const std::vector<Point>& points) {
+std::vector<Pair<Pair<int, int>, Pair<int, int>>> getAllAvailableMoves_(int** matrix, const std::vector<Point>& points) {
     std::vector<Pair<Pair<int, int>, Pair<int, int>>> availableMoves;
 
     // Loop through each point on the board
@@ -830,6 +830,7 @@ std::vector<Pair<Pair<int, int>, Pair<int, int>>> getAllAvailableMoves_(const in
     return availableMoves;
 }
 
+
 bool isValidMove(const int matrix[][9], const Pair<int, int>& start, const Pair<int, int>& end) {
     if (start.first < 0 || start.first >= 9 || start.second < 0 || start.second >= 9 ||
         end.first < 0 || end.first >= 9 || end.second < 0 || end.second >= 9) {
@@ -839,7 +840,7 @@ bool isValidMove(const int matrix[][9], const Pair<int, int>& start, const Pair<
     return (matrix[end.first][end.second] == 0);
 }
 
-int** eatSoldier(int matrix[][9], const Pair<int, int>& start, const Pair<int, int>& end) {
+int** eatSoldier(int** matrix, const Pair<int, int>& start, const Pair<int, int>& end) {
     int** newMatrix = simulateMove(matrix, start, end);
 
     int oppositeSoldier = (newMatrix[start.first][start.second] == 1) ? 2 : 1;
@@ -855,7 +856,7 @@ int minimax(int** matrix, int depth, bool isMaximizingPlayer) {
     if (depth == 0) {
         return score;
     }
-
+    std::vector<Point> points = createPointsVector();
     std::vector<Pair<Pair<int, int>, Pair<int, int>>> availableMoves = getAllAvailableMoves_(matrix, points);
     if (isMaximizingPlayer) {
         int bestScore = -9999;
