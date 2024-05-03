@@ -871,7 +871,17 @@ int** eatSoldier(int** matrix, const Pair<int, int>& start, const Pair<int, int>
 
     return newMatrix;
 }
-int minimax(int** matrix, int depth, bool isMaximizingPlayer) {
+void Deletematrix(int** newMatrix)
+{
+    if (newMatrix == nullptr) return;
+    // Освободить память для newMatrix
+    for (int i = 0; i < SIZE; ++i) {
+        delete[] newMatrix[i];
+    }
+    delete[] newMatrix;
+}
+
+int minimax(int** matrix, int depth, bool isMaximizingPlayer, int alpha, int beta) {
     int score = Evalutate(matrix);
     if (depth == 0) {
         return score;
@@ -882,9 +892,12 @@ int minimax(int** matrix, int depth, bool isMaximizingPlayer) {
         int bestScore = -9999;
         for (const auto& move : availableMoves) {
             int** newMatrix = simulateMove(matrix, move.first, move.second);
-            int newScore = minimax(newMatrix, depth - 1, false);
+            int newScore = minimax(newMatrix, depth - 1, false, alpha, beta);
             bestScore = std::max(bestScore, newScore);
-
+            alpha = std::max(alpha, bestScore);
+            Deletematrix(newMatrix);
+            if (beta <= alpha) // Альфа-бета отсечение
+                break;
         }
         return bestScore;
     }
@@ -892,21 +905,16 @@ int minimax(int** matrix, int depth, bool isMaximizingPlayer) {
         int bestScore = 9999;
         for (const auto& move : availableMoves) {
             int** newMatrix = simulateMove(matrix, move.first, move.second);
-            int newScore = minimax(newMatrix, depth - 1, true);
+            int newScore = minimax(newMatrix, depth - 1, true, alpha, beta);
             bestScore = std::min(bestScore, newScore);
+            alpha = std::max(alpha, bestScore);
+            Deletematrix(newMatrix);
+            if (beta <= alpha) // Альфа-бета отсечение
+                break;
 
         }
         return bestScore;
     }
-}
-void Deletematrix(int** newMatrix)
-{
-    if (newMatrix == nullptr) return;
-    // Освободить память для newMatrix
-    for (int i = 0; i < SIZE; ++i) {
-        delete[] newMatrix[i];
-    }
-    delete[] newMatrix;
 }
 
 void MinMaxWithSimulation(int** matrix, vector<Point>& points, int depth, int& bestScore, Pair<Pair<int, int>, Pair<int, int>>& bestMove, bool isMaximizingPlayer)
@@ -920,9 +928,11 @@ void MinMaxWithSimulation(int** matrix, vector<Point>& points, int depth, int& b
     }
     int** newBestMatrix{};
     int depthMinMax = 2;
+    int alpha = -9999;
+    int beta = 9999;
     for (const auto& move : availableMoves) {
         int** newMatrix = simulateMove(matrix, move.first, move.second);
-        int score = minimax(newMatrix, 2, isMaximizingPlayer);
+        int score = minimax(newMatrix, 2, isMaximizingPlayer, alpha, beta);
         if (score > bestScore) {
             bestScore = score;
             bestMove = move;
@@ -930,36 +940,62 @@ void MinMaxWithSimulation(int** matrix, vector<Point>& points, int depth, int& b
             newBestMatrix = newMatrix;
         }
         else {
-            Deletematrix(newMatrix);
+            if (score < bestScore) {
+                bestScore = score;
+                bestMove = move;
+                Deletematrix(newBestMatrix);
+                newBestMatrix = newMatrix;
+            }
+            beta = std::min(beta, bestScore);
         }
+        if (beta <= alpha) // Альфа-бета отсечение
+            break;
     }
+    
+    
     MinMaxWithSimulation(newBestMatrix, points, depth - 1, bestScore, bestMove, !isMaximizingPlayer);
 }
 
-
-
+Pair<Pair<int, int>, Pair<int, int>> getHumanMove() {
+    int startX, startY, endX, endY;
+    std::cout << "Enter start position (x y): ";
+    std::cin >> startX >> startY;
+    std::cout << "Enter end position (x y): ";
+    std::cin >> endX >> endY;
+    
+    return Pair<Pair<int, int>, Pair<int, int>>(Pair<int, int>(startX, startY), Pair<int, int>(endX, endY));
+}
+void printMatrix(int** matrix){
+    std::cout<<"  ";
+    for (int i =0; i<9; i++){
+        std::cout<<i<<" ";
+    }
+    std:: cout<<std::endl;
+    for (int i=0; i<9; i++){
+        std::cout<<i<<' ';
+        for (int j=0; j<9; j++){
+            if (matrix[i][j] == -1){
+                std::cout<<"  ";
+            } else {
+                std::cout<<matrix[i][j]<<' ';
+            }
+        }
+        std::cout<<std::endl;
+    }
+    std::cout<<std::endl;
+}
 int main() {
     int** matrix; // Определите матрицу игровой доски
 
-    // Заполните матрицу
-    //int initialMatrix[9][9] = { {-1, -1, 1, -1, 1, -1, 1, -1, -1},
-    //                             {-1, -1, -1, 1, 1, 1, -1, -1, -1},
-    //                             {0, -1, 1, 1, 1, 1, 1, -1, 0},
-    //                             {-1, 0, 1, 1, 0, 1, 1, 0, -1},
-    //                             {0, 0, 0, 0, 0, 0, 0, 0, 0},
-    //                             {-1, 0, 2, 2, 1, 2, 2, 0, -1},
-    //                             {0, -1, 2, 2, 2, 2, 2, -1, 0},
-    //                             {-1, -1, -1, 2, 2, 2, -1, -1, -1},
-    //                             {-1, -1, 2, -1, 2, -1, 2, -1, -1} };
-    int initialMatrix[9][9] = { {-1, -1, 1, -1, 1, -1, 1, -1, -1},
-                                 {-1, -1, -1, 1, 1, 1, -1, -1, -1},
-                                 {0, -1, 1, 1, 1, 1, 1, -1, 0},
-                                 {-1, 0, 1, 1, 0, 0, 1, 0, -1},
-                                 {0, 0, 0, 0, 2, 1, 0, 0, 0},
-                                 {-1, 0, 2, 2, 0, 2, 2, 0, -1},
-                                 {0, -1, 2, 2, 0, 2, 2, -1, 0},
-                                 {-1, -1, -1, 2, 2, 2, -1, -1, -1},
-                                 {-1, -1, 2, -1, 2, -1, 2, -1, -1} };
+    int initialMatrix[9][9] = {  {-1, -1,  1, -1,  1, -1,  1, -1, -1},
+                                 {-1, -1, -1,  1,  1,  1, -1, -1, -1},
+                                 { 0, -1,  1,  1,  1,  1,  1, -1,  0},
+                                 {-1,  0,  1,  1,  1,  1,  1,  0, -1},
+                                 { 0,  0,  0,  0,  0,  0,  0,  0,  0},
+                                 {-1,  0,  2,  2,  2,  2,  2,  0, -1},
+                                 { 0, -1,  2,  2,  2,  2,  2, -1,  0},
+                                 {-1, -1, -1,  2,  2,  2, -1, -1, -1},
+                                 {-1, -1,  2, -1,  2, -1,  2, -1, -1} };
     matrix = new int* [9];
     for (int i = 0; i < 9; ++i) {
         matrix[i] = new int[9];
@@ -967,22 +1003,64 @@ int main() {
             matrix[i][j] = initialMatrix[i][j];
         }
     }  
+    bool game_over = false;
+    int winner = 0; // 0 - ничья, 1 - победа красных, 2 - победа белых
+    printMatrix(matrix);
+    while (!game_over) {
+        // Ход человека
+        
+        Pair<Pair<int, int>, Pair<int, int>> humanMove = getHumanMove();
+        matrix = simulateMove(matrix, humanMove.first, humanMove.second);
+        printMatrix(matrix);
+        // Проверьте, завершена ли игра после хода человека
+        winner = checkWinner(matrix);
+        if (winner != 0) {
+            game_over = true;
+            break;
+        }
 
+        vector<Point> points = createPointsVector();
+        // Ход компьютера
+        Pair<Pair<int, int>, Pair<int, int>> bestMove;
+        int bestScore = -9999; 
+        int depth = 3; // Установите глубину в соответствии с вашими потребностями
+        bool isMaximizingPlayer = true; // Предположим, что максимизирующий игрок - это компьютерный игрок
+
+        MinMaxWithSimulation(matrix, points, depth, bestScore, bestMove, isMaximizingPlayer);
+
+        // Выполните лучший ход компьютера
+        matrix = simulateMove(matrix, bestMove.first, bestMove.second);
+        printMatrix(matrix);
+        // Проверьте, завершена ли игра после хода компьютера
+        winner = checkWinner(matrix);
+        if (winner != 0) {
+            game_over = true;
+        }
+    }
+
+    // Выведите результат игры
+    if (winner == 1) {
+        std::cout << "Red Won!" << std::endl;
+    } else if (winner == 2) {
+        std::cout << "White Won!" << std::endl;
+    } else {
+        std::cout << "It's a draw!" << std::endl;
+    }
     // Создайте вектор точек points
-    vector<Point> points = createPointsVector();
+    // vector<Point> points = createPointsVector();
 
-    Pair<Pair<int, int>, Pair<int, int>> bestMove;
-    int bestScore = -9999; 
-    // Выберите лучший ход с помощью минимакс алгоритма
-    int depth =3; // Установите глубину в соответствии с вашими потребностями
-    bool isMaximizingPlayer = true; // Предположим, что максимизирующий игрок - это компьютерный игрок
+    // Pair<Pair<int, int>, Pair<int, int>> bestMove;
+    // int bestScore = -9999; 
+    // // Выберите лучший ход с помощью  минимакс алгоритма
+    // int depth =3; // Установите глубину в соответствии с вашими потребностями
+    // bool isMaximizingPlayer = true; // Предположим, что максимизирующий игрок - это компьютерный игрок
 
-    MinMaxWithSimulation(matrix, points, depth, bestScore, bestMove, isMaximizingPlayer);
+    // MinMaxWithSimulation(matrix, points, depth, bestScore, bestMove, isMaximizingPlayer);
 
-    // Выведите лучший ход
-    std::cout << "Best move: (" << bestMove.first.first << ", " << bestMove.first.second << ") -> ("
-        << bestMove.second.first << ", " << bestMove.second.second << ")" << std::endl;
-    std::cout << "Best score from minmax: " << bestScore << std::endl;
+    // // Выведите лучший ход
+    // std::cout << "Best move: (" << bestMove.first.first << ", " << bestMove.first.second << ") -> ("
+    //     << bestMove.second.first << ", " << bestMove.second.second << ")" << std::endl;
+    // std::cout << "Best score from minmax: " << bestScore << std::endl;
     // Освободить память для matrix
     for (int i = 0; i < 9; ++i) {
         delete[] matrix[i];
