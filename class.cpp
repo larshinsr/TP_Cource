@@ -817,68 +817,7 @@ int checkWinner(int** matrix) {
     }
     return 0;
 }
-int** eatSoldier(int** matrix, const Pair<int, int>& start, const Pair<int, int>& end);
-// Метод для перемещения солдата
-int** simulateMove(int** matrix, const Pair<int, int>& start, const Pair<int, int>& end) {
-    int** newMatrix = new int* [9];
-    for (int i = 0; i < 9; ++i) {
-        newMatrix[i] = new int[9];
-        for (int j = 0; j < 9; ++j) {
-            newMatrix[i][j] = matrix[i][j];
-        }
-    }
-
-    if (start.first < 0 || start.first >= 9 || start.second < 0 || start.second >= 9 ||
-        end.first < 0 || end.first >= 9 || end.second < 0 || end.second >= 9) {
-        std::cout << "Invalid move: Coordinates out of bounds." << std::endl;
-        return newMatrix;
-    }
-
-    if (newMatrix[end.first][end.second] != 0) {
-        std::cout << "Invalid move: End point is occupied." << std::endl;
-        return newMatrix;
-    }
-
-    int oppositeSoldier = (newMatrix[start.first][start.second] == 1) ? 2 : 1;
-    if (newMatrix[end.first][end.second] == oppositeSoldier) {
-        // Если на конечной точке стоит противоположный солдат, удаляем его
-        newMatrix = eatSoldier(newMatrix, start, end);
-    }
-
-    newMatrix[end.first][end.second] = newMatrix[start.first][start.second];
-    newMatrix[start.first][start.second] = 0;
-
-    // std::cout << "Move successful: Soldier moved from (" << start.first << ", " << start.second << ") to ("
-    //      << end.first << ", " << end.second << ")." << std::endl;
-
-    return newMatrix;
-}
-
-
-vector<Pair<Pair<int, int>, Pair<int, int>>> getAllAvailableMoves_(int** matrix, vector<Point>& points) {
-    vector<Pair<Pair<int, int>, Pair<int, int>>> availableMoves;
-
-    // Loop through each point on the board
-    for (const Point& point : points) {
-        Pair<int, int> start = point.getStart();
-
-        int currentPlayer = matrix[start.first][start.second];
-        if (currentPlayer == 0) continue;
-      //  if ((currentPlayer == 1 && start.first < 5) || (currentPlayer == 2 && start.first > 3))
-      //      continue;
-
-        const vector<Pair<int, int>>& endPoints = point.getEnd();
-        for (size_t j = 0; j < endPoints.size(); ++j) {
-            Pair<int, int> end = endPoints[j];
-            if (matrix[end.first][end.second] == 0) {
-                availableMoves.push_back(Pair<Pair<int, int>, Pair<int, int>>(start, end));
-            }
-        }
-    }
-
-    return availableMoves;
-}
-
+vector<Point> points = createPointsVector();
 int distInSquare(int startX, int startY, int endX, int endY){
     int dist = (startX-endX)*(startX-endX) + (startY - endY)*(startY - endY);
     return dist; 
@@ -900,7 +839,11 @@ int isValid16GutiMove(vector<Point>& points, Pair<int, int> start, Pair<int, int
                         if ((currentPlayer == 1 && matrix[m1][m2] == 2) || (currentPlayer == 2 && matrix[m1][m2] == 1)) {
                             return 2; // Съедение соперника
                         }
+                        if((currentPlayer == 1 && matrix[m1][m2] == 1) || (currentPlayer == 2 && matrix[m1][m2] == 2)){
+                            return 0;
                     }
+                    }
+                    
 
                 }
             }
@@ -940,25 +883,76 @@ int isEatingAvaliable(Pair<int, int> start, vector<Point>& points, int** matrix,
     }
     return 0;
 }
-int** eatSoldier(int** matrix, const Pair<int, int>& start, const Pair<int, int>& end) {
-    int** newMatrix = new int*[SIZE];
-    for (int i = 0; i < SIZE; ++i) {
-        newMatrix[i] = new int[SIZE];
-        for (int j = 0; j < SIZE; ++j) {
+// Метод для перемещения солдата
+int** simulateMove(int** matrix, const Pair<int, int>& start, const Pair<int, int>& end) {
+    int** newMatrix = new int* [9];
+    for (int i = 0; i < 9; ++i) {
+        newMatrix[i] = new int[9];
+        for (int j = 0; j < 9; ++j) {
             newMatrix[i][j] = matrix[i][j];
         }
+
+    }
+    int dist = distInSquare(start.first, start.second, end.first, end.second);
+    if(!isValid16GutiMove(points, start, end, dist, matrix[start.first][start.second], matrix))
+    {
+        std::cout << "Invalid move" << std::endl;
+        return newMatrix;
+    }
+
+    if (newMatrix[end.first][end.second] != 0) {
+        std::cout << "Invalid move: End point is occupied." << std::endl;
+        return newMatrix;
     }
 
     int oppositeSoldier = (newMatrix[start.first][start.second] == 1) ? 2 : 1;
     if (newMatrix[end.first][end.second] == oppositeSoldier) {
         // Если на конечной точке стоит противоположный солдат, удаляем его
-        newMatrix = simulateMove(matrix, start, end); // Обратите внимание на прямое присвоение, без объявления новой переменной
-        newMatrix[end.first][end.second] = 0;
-        std::cout << "Soldier at (" << end.first << ", " << end.second << ") eaten!" << std::endl;
+        int m1 = (start.first + end.first)/2;
+        int m2 = (start.second + end.second)/2;
+        if (newMatrix[m1][m2] != 0) {
+        // Удаляем съеденную фишку
+            newMatrix[m1][m2] = 0;
+        }
     }
+
+    
+    newMatrix[end.first][end.second] = newMatrix[start.first][start.second];
+    newMatrix[start.first][start.second] = 0;
+
+    // std::cout << "Move successful: Soldier moved from (" << start.first << ", " << start.second << ") to ("
+    //      << end.first << ", " << end.second << ")." << std::endl;
 
     return newMatrix;
 }
+
+
+vector<Pair<Pair<int, int>, Pair<int, int>>> getAllAvailableMoves_(int** matrix, vector<Point>& points) {
+    vector<Pair<Pair<int, int>, Pair<int, int>>> availableMoves;
+
+    // Loop through each point on the board
+    for (const Point& point : points) {
+        Pair<int, int> start = point.getStart();
+
+        int currentPlayer = matrix[start.first][start.second];
+        if (currentPlayer == 0) continue;
+      //  if ((currentPlayer == 1 && start.first < 5) || (currentPlayer == 2 && start.first > 3))
+      //      continue;
+
+        const vector<Pair<int, int>>& endPoints = point.getEnd();
+        for (size_t j = 0; j < endPoints.size(); ++j) {
+            Pair<int, int> end = endPoints[j];
+            if (matrix[end.first][end.second] == 0) {
+                availableMoves.push_back(Pair<Pair<int, int>, Pair<int, int>>(start, end));
+            }
+        }
+    }
+
+    return availableMoves;
+}
+
+
+
 void Deletematrix(int** newMatrix)
 {
     if (newMatrix == nullptr) return;
