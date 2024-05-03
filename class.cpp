@@ -144,9 +144,30 @@ public:
     void addEndPoint(const Pair<int, int>& endPoint) {
         end.push_back(endPoint);
     }
+    
 };
 
-
+void printEndPoint(int x, int y, const vector<Point>& points, int** matrix) {
+    for (int i=0; i<points.size(); i++) {
+        if (points[i].getStart().first == x && points[i].getStart().second == y) {
+            if (matrix[x][y] == 2) {
+                std::cout << "Start point: (" << x << ", " << y << ")" << std::endl;
+                const vector<Pair<int, int>>& endPoints = points[i].getEnd();
+                
+                for (int j=0; j<endPoints.size();j++) {
+                    if(matrix[endPoints[j].first][endPoints[j].second] == 0 ) {
+                        std::cout << "End point: (" << endPoints[j].first << ", " << endPoints[j].second << ")" << std::endl;
+                    }
+                }
+                return;
+            }
+            else{
+                std::cout<<"Not your charachter"<<std::endl;
+            }
+        }
+    }
+    std::cout << "Start point (" << x << ", " << y << ") not found." << std::endl;
+}
 vector<Point> createPointsVector() {
 
     vector <Point> points(49);
@@ -796,6 +817,7 @@ int checkWinner(int** matrix) {
     }
     return 0;
 }
+int** eatSoldier(int** matrix, const Pair<int, int>& start, const Pair<int, int>& end);
 // Метод для перемещения солдата
 int** simulateMove(int** matrix, const Pair<int, int>& start, const Pair<int, int>& end) {
     int** newMatrix = new int* [9];
@@ -817,14 +839,21 @@ int** simulateMove(int** matrix, const Pair<int, int>& start, const Pair<int, in
         return newMatrix;
     }
 
+    int oppositeSoldier = (newMatrix[start.first][start.second] == 1) ? 2 : 1;
+    if (newMatrix[end.first][end.second] == oppositeSoldier) {
+        // Если на конечной точке стоит противоположный солдат, удаляем его
+        newMatrix = eatSoldier(newMatrix, start, end);
+    }
+
     newMatrix[end.first][end.second] = newMatrix[start.first][start.second];
     newMatrix[start.first][start.second] = 0;
 
-   // std::cout << "Move successful: Soldier moved from (" << start.first << ", " << start.second << ") to ("
-  //      << end.first << ", " << end.second << ")." << std::endl;
+    // std::cout << "Move successful: Soldier moved from (" << start.first << ", " << start.second << ") to ("
+    //      << end.first << ", " << end.second << ")." << std::endl;
 
     return newMatrix;
 }
+
 
 vector<Pair<Pair<int, int>, Pair<int, int>>> getAllAvailableMoves_(int** matrix, vector<Point>& points) {
     vector<Pair<Pair<int, int>, Pair<int, int>>> availableMoves;
@@ -850,21 +879,80 @@ vector<Pair<Pair<int, int>, Pair<int, int>>> getAllAvailableMoves_(int** matrix,
     return availableMoves;
 }
 
+int distInSquare(int startX, int startY, int endX, int endY){
+    int dist = (startX-endX)*(startX-endX) + (startY - endY)*(startY - endY);
+    return dist; 
+}
+int isValid16GutiMove(vector<Point>& points, Pair<int, int> start, Pair<int, int> end, int dist, int currentPlayer, int** matrix){
+    for(auto& point: points){
+        if(point.getStart().first == start.first && point.getStart().second == start.second){
+            vector<Pair<int, int>> endPoints = point.getEnd();
+            for(auto& endPoint: endPoints){
+                if(endPoint.first == end.first && endPoint.second == end.second && matrix[end.first][end.second] == 0){
+                    if(dist == 1 || dist == 2){
+                        return 1;
+                    } else{
+                        int m1 = (start.first + end.first) / 2;
+                        int m2 = (start.second + end.second) / 2;
+                        if (matrix[m1][m2] == -1) {
+                            return 1; // Валидный ход
+                        }
+                        if ((currentPlayer == 1 && matrix[m1][m2] == 2) || (currentPlayer == 2 && matrix[m1][m2] == 1)) {
+                            return 2; // Съедение соперника
+                        }
+                    }
 
+                }
+            }
+        }
+    }
+    return 0;
+}
 bool isValidMove(const int matrix[][9], const Pair<int, int>& start, const Pair<int, int>& end) {
     if (start.first < 0 || start.first >= 9 || start.second < 0 || start.second >= 9 ||
         end.first < 0 || end.first >= 9 || end.second < 0 || end.second >= 9) {
         return false;
     }
+    
 
     return (matrix[end.first][end.second] == 0);
 }
 
+int isEatingAvaliable(Pair<int, int> start, vector<Point>& points, int** matrix, int currentPlayer){
+    for (const Point& point : points) {
+        Pair<int, int> startPoint = point.getStart();
+        if(start.first == startPoint.first && start.second == startPoint.second){
+            vector<Pair<int, int>> endPoints = point.getEnd();
+            for (auto& endPoint : endPoints) {
+                int distInSqr = distInSquare(endPoint.second, endPoint.first, start.second, start.first);
+                if (distInSqr != 1 && distInSqr != 2 && matrix[endPoint.first][endPoint.second] == 0) {
+                    int m1 = (start.first + endPoint.first) / 2;
+                    int m2 = (start.second + endPoint.second) / 2;
+                    if (matrix[m1][m2] == -1) {
+                        return 0;
+                    }
+                    if ((currentPlayer == 1 && matrix[m1][m2] == 2) || (currentPlayer == 2 && matrix[m1][m2] == 1)) {
+                        return 1;
+                    }
+                }
+            }
+        }
+    }
+    return 0;
+}
 int** eatSoldier(int** matrix, const Pair<int, int>& start, const Pair<int, int>& end) {
-    int** newMatrix = simulateMove(matrix, start, end);
+    int** newMatrix = new int*[SIZE];
+    for (int i = 0; i < SIZE; ++i) {
+        newMatrix[i] = new int[SIZE];
+        for (int j = 0; j < SIZE; ++j) {
+            newMatrix[i][j] = matrix[i][j];
+        }
+    }
 
     int oppositeSoldier = (newMatrix[start.first][start.second] == 1) ? 2 : 1;
     if (newMatrix[end.first][end.second] == oppositeSoldier) {
+        // Если на конечной точке стоит противоположный солдат, удаляем его
+        newMatrix = simulateMove(matrix, start, end); // Обратите внимание на прямое присвоение, без объявления новой переменной
         newMatrix[end.first][end.second] = 0;
         std::cout << "Soldier at (" << end.first << ", " << end.second << ") eaten!" << std::endl;
     }
@@ -881,7 +969,7 @@ void Deletematrix(int** newMatrix)
     delete[] newMatrix;
 }
 
-int minimax(int** matrix, int depth, bool isMaximizingPlayer, int alpha, int beta) {
+int minimax(int** matrix, int depth, bool isMaximizingPlayer) {
     int score = Evalutate(matrix);
     if (depth == 0) {
         return score;
@@ -892,12 +980,9 @@ int minimax(int** matrix, int depth, bool isMaximizingPlayer, int alpha, int bet
         int bestScore = -9999;
         for (const auto& move : availableMoves) {
             int** newMatrix = simulateMove(matrix, move.first, move.second);
-            int newScore = minimax(newMatrix, depth - 1, false, alpha, beta);
+            int newScore = minimax(newMatrix, depth - 1, false);
             bestScore = std::max(bestScore, newScore);
-            alpha = std::max(alpha, bestScore);
-            Deletematrix(newMatrix);
-            if (beta <= alpha) // Альфа-бета отсечение
-                break;
+
         }
         return bestScore;
     }
@@ -905,12 +990,8 @@ int minimax(int** matrix, int depth, bool isMaximizingPlayer, int alpha, int bet
         int bestScore = 9999;
         for (const auto& move : availableMoves) {
             int** newMatrix = simulateMove(matrix, move.first, move.second);
-            int newScore = minimax(newMatrix, depth - 1, true, alpha, beta);
+            int newScore = minimax(newMatrix, depth - 1, true);
             bestScore = std::min(bestScore, newScore);
-            alpha = std::max(alpha, bestScore);
-            Deletematrix(newMatrix);
-            if (beta <= alpha) // Альфа-бета отсечение
-                break;
 
         }
         return bestScore;
@@ -919,7 +1000,7 @@ int minimax(int** matrix, int depth, bool isMaximizingPlayer, int alpha, int bet
 
 void MinMaxWithSimulation(int** matrix, vector<Point>& points, int depth, int& bestScore, Pair<Pair<int, int>, Pair<int, int>>& bestMove, bool isMaximizingPlayer)
 {
-    if (depth == 0||checkWinner(matrix))
+    if (depth == 0 || checkWinner(matrix))
         return;
     // Получите доступные ходы
     vector<Pair<Pair<int, int>, Pair<int, int>>> availableMoves = getAllAvailableMoves_(matrix, points);
@@ -928,11 +1009,9 @@ void MinMaxWithSimulation(int** matrix, vector<Point>& points, int depth, int& b
     }
     int** newBestMatrix{};
     int depthMinMax = 2;
-    int alpha = -9999;
-    int beta = 9999;
     for (const auto& move : availableMoves) {
         int** newMatrix = simulateMove(matrix, move.first, move.second);
-        int score = minimax(newMatrix, 2, isMaximizingPlayer, alpha, beta);
+        int score = minimax(newMatrix, 2, isMaximizingPlayer);
         if (score > bestScore) {
             bestScore = score;
             bestMove = move;
@@ -940,31 +1019,23 @@ void MinMaxWithSimulation(int** matrix, vector<Point>& points, int depth, int& b
             newBestMatrix = newMatrix;
         }
         else {
-            if (score < bestScore) {
-                bestScore = score;
-                bestMove = move;
-                Deletematrix(newBestMatrix);
-                newBestMatrix = newMatrix;
-            }
-            beta = std::min(beta, bestScore);
+            Deletematrix(newMatrix);
         }
-        if (beta <= alpha) // Альфа-бета отсечение
-            break;
     }
-    
-    
     MinMaxWithSimulation(newBestMatrix, points, depth - 1, bestScore, bestMove, !isMaximizingPlayer);
 }
 
-Pair<Pair<int, int>, Pair<int, int>> getHumanMove() {
+
+Pair<Pair<int, int>, Pair<int, int>> getHumanMove(vector<Point>& points, int** matrix) {
     int startX, startY, endX, endY;
     std::cout << "Enter start position (x y): ";
     std::cin >> startX >> startY;
+    printEndPoint(startX, startY, points, matrix);
     std::cout << "Enter end position (x y): ";
     std::cin >> endX >> endY;
-    
     return Pair<Pair<int, int>, Pair<int, int>>(Pair<int, int>(startX, startY), Pair<int, int>(endX, endY));
 }
+
 void printMatrix(int** matrix){
     std::cout<<"  ";
     for (int i =0; i<9; i++){
@@ -1006,10 +1077,11 @@ int main() {
     bool game_over = false;
     int winner = 0; // 0 - ничья, 1 - победа красных, 2 - победа белых
     printMatrix(matrix);
+    vector<Point> points = createPointsVector();
     while (!game_over) {
         // Ход человека
         
-        Pair<Pair<int, int>, Pair<int, int>> humanMove = getHumanMove();
+        Pair<Pair<int, int>, Pair<int, int>> humanMove = getHumanMove(points, matrix);
         matrix = simulateMove(matrix, humanMove.first, humanMove.second);
         printMatrix(matrix);
         // Проверьте, завершена ли игра после хода человека
@@ -1019,7 +1091,7 @@ int main() {
             break;
         }
 
-        vector<Point> points = createPointsVector();
+        
         // Ход компьютера
         Pair<Pair<int, int>, Pair<int, int>> bestMove;
         int bestScore = -9999; 
