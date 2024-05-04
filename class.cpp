@@ -883,20 +883,29 @@ int isEatingAvaliable(Pair<int, int> start, vector<Point>& points, int** matrix,
     }
     return 0;
 }
+void printMatrix(int **matrix);
+void eatPiece(Pair<int, int> start, Pair<int, int> end, int** matrix) {
+    // Calculate the midpoint between start and end points
+    int midX = (start.first + end.first) / 2;
+    int midY = (start.second + end.second) / 2;
+    
+    // Set the value of the midpoint to 0 (indicating an eaten piece)
+    matrix[midX][midY] = 0;
+}
+
 // Метод для перемещения солдата
-int** simulateMove(int** matrix, const Pair<int, int>& start, const Pair<int, int>& end) {
-    int** newMatrix = new int* [9];
+int** simulateMove(int** matrix, Pair<int, int> start, Pair<int, int> end) {
+    int** newMatrix = new int*[9];
     for (int i = 0; i < 9; ++i) {
         newMatrix[i] = new int[9];
         for (int j = 0; j < 9; ++j) {
             newMatrix[i][j] = matrix[i][j];
         }
-
     }
+
     int dist = distInSquare(start.first, start.second, end.first, end.second);
-    if(!isValid16GutiMove(points, start, end, dist, matrix[start.first][start.second], matrix))
-    {
-        std::cout << "Invalid move" << std::endl;
+    if (!isValid16GutiMove(points, start, end, dist, matrix[start.first][start.second], matrix)) {
+        // std::cout << "Invalid move" << std::endl;
         return newMatrix;
     }
 
@@ -905,25 +914,42 @@ int** simulateMove(int** matrix, const Pair<int, int>& start, const Pair<int, in
         return newMatrix;
     }
 
-    int oppositeSoldier = (newMatrix[start.first][start.second] == 1) ? 2 : 1;
-    if (newMatrix[end.first][end.second] == oppositeSoldier) {
-        // Если на конечной точке стоит противоположный солдат, удаляем его
-        int m1 = (start.first + end.first)/2;
-        int m2 = (start.second + end.second)/2;
-        if (newMatrix[m1][m2] != 0) {
-        // Удаляем съеденную фишку
+    int oppositeSoldier = (matrix[start.first][start.second] == 1) ? 2 : 1;
+
+    if (isValid16GutiMove(points, start, end, dist, newMatrix[start.first][start.second], matrix) == 2) {
+        int m1 = (start.first + end.first) / 2;
+        int m2 = (start.second + end.second) / 2;
+        if (newMatrix[m1][m2] == oppositeSoldier) {
             newMatrix[m1][m2] = 0;
+            newMatrix[end.first][end.second] = newMatrix[start.first][start.second];
+            newMatrix[start.first][start.second] = 0;
+            // start.first = end.first;
+            // start.second = end.second;
         }
     }
 
-    
     newMatrix[end.first][end.second] = newMatrix[start.first][start.second];
     newMatrix[start.first][start.second] = 0;
 
-    // std::cout << "Move successful: Soldier moved from (" << start.first << ", " << start.second << ") to ("
-    //      << end.first << ", " << end.second << ")." << std::endl;
-
     return newMatrix;
+}
+
+int** simulateMoveAI(int** matrix, const Pair<int, int>& start, const Pair<int, int>& end){
+    int** newMatrix = new int* [9];
+    for (int i = 0; i < 9; ++i) {
+        newMatrix[i] = new int[9];
+        for (int j = 0; j < 9; ++j) {
+            newMatrix[i][j] = matrix[i][j];
+        }
+
+    }
+    int m1 = (start.first + end.first)/2;
+    int m2 = (start.second + end.second)/2;
+    newMatrix[end.first][end.second] = newMatrix[start.first][start.second];
+    newMatrix[start.first][start.second] = 0;
+    newMatrix[m1][m2] = 0;
+    return newMatrix;
+    
 }
 
 
@@ -1093,9 +1119,9 @@ int main() {
         bool isMaximizingPlayer = true; // Предположим, что максимизирующий игрок - это компьютерный игрок
 
         MinMaxWithSimulation(matrix, points, depth, bestScore, bestMove, isMaximizingPlayer);
-
+        std::cout<<bestMove.first.first<<' '<<bestMove.first.second<<' '<<bestMove.second.first<<' '<<bestMove.second.second<<std::endl;;
         // Выполните лучший ход компьютера
-        matrix = simulateMove(matrix, bestMove.first, bestMove.second);
+        matrix = simulateMoveAI(matrix, bestMove.first, bestMove.second);
         printMatrix(matrix);
         // Проверьте, завершена ли игра после хода компьютера
         winner = checkWinner(matrix);
