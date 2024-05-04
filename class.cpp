@@ -915,7 +915,7 @@ int** simulateMove(int** matrix, Pair<int, int> start, Pair<int, int> end) {
     }
 
     int oppositeSoldier = (matrix[start.first][start.second] == 1) ? 2 : 1;
-
+    //здесь начинается съедание игроком
     if (isValid16GutiMove(points, start, end, dist, newMatrix[start.first][start.second], matrix) == 2) {
         int m1 = (start.first + end.first) / 2;
         int m2 = (start.second + end.second) / 2;
