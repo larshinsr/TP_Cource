@@ -915,7 +915,7 @@ int** simulateMove(int** matrix, Pair<int, int> start, Pair<int, int> end) {
     }
 
     int oppositeSoldier = (matrix[start.first][start.second] == 1) ? 2 : 1;
-    //здесь начинается съедание игроком
+    //здесь у меня начинается съедание игроком
     if (isValid16GutiMove(points, start, end, dist, newMatrix[start.first][start.second], matrix) == 2) {
         int m1 = (start.first + end.first) / 2;
         int m2 = (start.second + end.second) / 2;
@@ -933,7 +933,21 @@ int** simulateMove(int** matrix, Pair<int, int> start, Pair<int, int> end) {
 
     return newMatrix;
 }
-
+int** setPosition(int** matrix, const Pair<int, int>& start, const Pair<int, int>& end){
+    int** newMatrix = new int* [9];
+    for (int i = 0; i < 9; ++i) {
+        newMatrix[i] = new int[9];
+        for (int j = 0; j < 9; ++j) {
+            newMatrix[i][j] = matrix[i][j];
+        }
+    }
+    int m1 = (start.first + end.first)/2+1;
+    int m2 = (start.second + end.second)/2;
+    newMatrix[end.first][end.second] = 2;
+    newMatrix[start.first][start.second] = 0;
+    newMatrix[m1][m2] = 0;
+    return newMatrix;
+}
 int** simulateMoveAI(int** matrix, const Pair<int, int>& start, const Pair<int, int>& end){
     int** newMatrix = new int* [9];
     for (int i = 0; i < 9; ++i) {
@@ -1028,7 +1042,7 @@ void MinMaxWithSimulation(int** matrix, vector<Point>& points, int depth, int& b
         return;
     }
     int** newBestMatrix{};
-    int depthMinMax = 2;
+    int depthMinMax = 3;
     for (const auto& move : availableMoves) {
         int** newMatrix = simulateMove(matrix, move.first, move.second);
         int score = minimax(newMatrix, 2, isMaximizingPlayer);
@@ -1103,6 +1117,7 @@ int main() {
         
         Pair<Pair<int, int>, Pair<int, int>> humanMove = getHumanMove(points, matrix);
         matrix = simulateMove(matrix, humanMove.first, humanMove.second);
+        matrix = setPosition(matrix, humanMove.first, humanMove.second);
         printMatrix(matrix);
         // Проверьте, завершена ли игра после хода человека
         winner = checkWinner(matrix);
